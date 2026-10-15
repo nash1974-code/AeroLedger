@@ -3,766 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AeroLedger - Charter & Cargo Financial Dashboard</title>
+    <title>AeroLedger - Aviation Financial Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root {
-            --primary: #1e3a8a;
-            --primary-light: #3b82f6;
-            --accent: #0f172a;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #334155;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding: 16px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        header {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 24px;
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .sync-badge {
-            font-size: 0.75rem;
-            padding: 4px 10px;
-            background: #d1fae5;
-            color: #065f46;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        .nav-tabs {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 4px;
-        }
-
-        .nav-btn {
-            padding: 8px 16px;
-            background: #f1f5f9;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            white-space: nowrap;
-            transition: all 0.2s;
-        }
-
-        .nav-btn.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .controls-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .filter-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        select, input {
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.875rem;
-            background: white;
-            color: var(--text-main);
-        }
-
-        button.action-btn {
-            background: var(--primary-light);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.875rem;
-            transition: background 0.2s;
-        }
-
-        button.action-btn:hover {
-            background: var(--primary);
-        }
-
-        button.secondary-btn {
-            background: #64748b;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.875rem;
-        }
-
-        .grid-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            padding: 16px;
-            border-radius: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            border-left: 4px solid var(--primary-light);
-        }
-
-        .card.income { border-left-color: var(--success); }
-        .card.expense { border-left-color: var(--danger); }
-        .card.petty { border-left-color: var(--warning); }
-
-        .card h3 {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .card .amount {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--accent);
-        }
-
-        .dashboard-section {
-            display: none;
-        }
-
-        .dashboard-section.active {
-            display: block;
-        }
-
-        .panel {
-            background: var(--card-bg);
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-
-        .panel h2 {
-            font-size: 1.1rem;
-            margin-bottom: 16px;
-            color: var(--primary);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.875rem;
-            text-align: left;
-        }
-
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th {
-            background: #f8fafc;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        .badge {
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        .badge.cash { background: #fef3c7; color: #92400e; }
-        .badge.card { background: #e0f2fe; color: #0369a1; }
-        .badge.transfer { background: #d1fae5; color: #065f46; }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 16px;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 24px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 500px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .form-group {
-            margin-bottom: 14px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin-top: 20px;
-        }
-
-        @media(max-width: 768px) {
-            .grid-cards { grid-template-columns: 1fr; }
-            table { display: block; overflow-x: auto; }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-12">
 
-    <header>
-        <div class="header-top">
-            <h1>✈️ AeroLedger <span style="font-size:0.9rem; font-weight:normal; color:var(--text-muted);">Charter & Cargo Operations</span></h1>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <span class="sync-badge">🟢 Cloud Sync Active</span>
-                <button class="action-btn" onclick="openModal()">+ Add Transaction</button>
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 p-2 rounded-xl text-white">
+                    <i data-lucide="plane" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white">AeroLedger</h1>
+                    <p class="text-xs text-slate-400">Charter & Cargo Financial Operations</p>
+                </div>
             </div>
-        </div>
-        <div class="nav-tabs">
-            <button class="nav-btn active" onclick="switchTab('overview')">Overview & Charts</button>
-            <button class="nav-btn" onclick="switchTab('expenses')">Expenses Ledger</button>
-            <button class="nav-btn" onclick="switchTab('income')">Income Ledger</button>
-            <button class="nav-btn" onclick="switchTab('archive')">Archive & Backup</button>
+            <div class="flex items-center space-x-2">
+                <button onclick="exportData()" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-2 rounded-lg font-medium flex items-center space-x-1 transition">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Export Backup</span>
+                </button>
+            </div>
         </div>
     </header>
 
-    <!-- CONTROLS & TIME FILTER -->
-    <div class="controls-bar">
-        <div class="filter-group">
-            <label for="timeFilter" style="font-weight:600;">Timeframe:</label>
-            <select id="timeFilter" onchange="renderDashboard()">
-                <option value="weekly">This Week</option>
-                <option value="monthly" selected>This Month</option>
-                <option value="annually">This Year</option>
-                <option value="all">All Time</option>
-            </select>
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-            <label for="paymentFilter" style="font-weight:600; margin-left: 10px;">Payment:</label>
-            <select id="paymentFilter" onchange="renderDashboard()">
-                <option value="all">All Methods</option>
-                <option value="Cash">Cash</option>
-                <option value="Card">Card</option>
-                <option value="Direct Bank Transfer">Bank Transfer</option>
-                <option value="Corporate Account">Corporate Account</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <input type="text" id="searchInput" placeholder="Search client, tail #, desc..." oninput="renderDashboard()">
-        </div>
-    </div>
-
-    <!-- OVERVIEW TAB -->
-    <div id="overview" class="dashboard-section active">
-        <div class="grid-cards">
-            <div class="card income">
-                <h3>Total Income</h3>
-                <div class="amount" id="sumIncome">$0.00</div>
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-sm">
+                <div class="flex justify-between items-center text-slate-400 mb-2">
+                    <span class="text-sm font-medium">Total Income</span>
+                    <i data-lucide="trending-up" class="w-5 h-5 text-emerald-400"></i>
+                </div>
+                <div id="total-income" class="text-2xl font-bold text-emerald-400">$0.00</div>
             </div>
-            <div class="card expense">
-                <h3>Total Expenses</h3>
-                <div class="amount" id="sumExpense">$0.00</div>
+            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-sm">
+                <div class="flex justify-between items-center text-slate-400 mb-2">
+                    <span class="text-sm font-medium">Total Expenses</span>
+                    <i data-lucide="trending-down" class="w-5 h-5 text-rose-400"></i>
+                </div>
+                <div id="total-expense" class="text-2xl font-bold text-rose-400">$0.00</div>
             </div>
-            <div class="card petty">
-                <h3>Petty Cash Outflow</h3>
-                <div class="amount" id="sumPetty">$0.00</div>
-            </div>
-            <div class="card">
-                <h3>Net Operating Balance</h3>
-                <div class="amount" id="sumNet">$0.00</div>
+            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-sm">
+                <div class="flex justify-between items-center text-slate-400 mb-2">
+                    <span class="text-sm font-medium">Net Balance</span>
+                    <i data-lucide="wallet" class="w-5 h-5 text-blue-400"></i>
+                </div>
+                <div id="net-balance" class="text-2xl font-bold text-white">$0.00</div>
             </div>
         </div>
 
-        <div class="panel">
-            <h2>Financial Breakdown & Distribution</h2>
-            <div class="chart-container">
-                <canvas id="financeChart"></canvas>
-            </div>
-        </div>
-    </div>
+        <!-- Action Grid: Add Transaction Form -->
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
+            <h2 class="text-lg font-semibold mb-4 flex items-center space-x-2">
+                <i data-lucide="plus-circle" class="w-5 h-5 text-blue-400"></i>
+                <span>New Transaction</span>
+            </h2>
+            <form id="transaction-form" onsubmit="addTransaction(event)" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Type</label>
+                        <select id="type" onchange="toggleCategoryOptions()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                            <option value="income">Income (Charter / Cargo)</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Category</label>
+                        <select id="category" onchange="checkFuelCategory()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Amount ($)</label>
+                        <input type="number" step="0.01" id="amount" required placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
 
-    <!-- EXPENSES TAB -->
-    <div id="expenses" class="dashboard-section">
-        <div class="panel">
-            <h2>Expenses Ledger (Direct & Overhead / Petty Cash)</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Client / Company</th>
-                        <th>Subcategory</th>
-                        <th>Payment Method</th>
-                        <th>Tail # / Ref</th>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="expenseTableBody">
-                    <!-- Populated dynamically -->
-                </tbody>
-            </table>
-        </div>
-    </div>
+                <!-- Conditional Fuel Extra Fields -->
+                <div id="fuel-fields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-900/50 rounded-xl border border-slate-700/60">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Fuel Quantity (Liters)</label>
+                        <input type="number" step="0.1" id="fuel-liters" placeholder="e.g., 450" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Route / Sector</label>
+                        <input type="text" id="fuel-route" placeholder="e.g., FAOR - FQMA" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
 
-    <!-- INCOME TAB -->
-    <div id="income" class="dashboard-section">
-        <div class="panel">
-            <h2>Income & Revenue Ledger (Charter & Cargo)</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Client / Company</th>
-                        <th>Revenue Stream</th>
-                        <th>Payment Method</th>
-                        <th>Tail # / Ref</th>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="incomeTableBody">
-                    <!-- Populated dynamically -->
-                </tbody>
-            </table>
-        </div>
-    </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Description / Notes</label>
+                    <input type="text" id="description" required placeholder="e.g., VIP Charter Flight / Office Rent for October" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                </div>
 
-    <!-- ARCHIVE & BACKUP TAB -->
-    <div id="archive" class="dashboard-section">
-        <div class="panel">
-            <h2>5-Year Archiving & Historical Traceback</h2>
-            <div class="form-group" style="max-width:300px; margin-bottom:20px;">
-                <label for="archiveYearSelect">Select Historical Year or Block:</label>
-                <select id="archiveYearSelect" onchange="renderArchive()">
-                    <option value="2026">2026 (Active 5-Year Block)</option>
-                    <option value="2025">2025 (Archived)</option>
-                    <option value="2020-2024">2020–2024 (5-Year Cycle Archive)</option>
-                    <option value="all-archives">All Historical Records</option>
-                </select>
-            </div>
-            <div id="archiveSummary" style="font-size:0.95rem; margin-bottom:15px; color:var(--text-muted);">
-                Viewing records locked for audit compliance. Active records remain editable in operational ledgers.
-            </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-xl transition text-sm">
+                    Save Transaction
+                </button>
+            </form>
         </div>
 
-        <div class="panel">
-            <h2>Local Export & Data Backup</h2>
-            <p style="margin-bottom: 15px; font-size:0.9rem; color:var(--text-muted);">
-                Export your full ledger history locally for permanent 100-year safekeeping, spreadsheet auditing, or tax reporting.
-            </p>
-            <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                <button class="action-btn" onclick="exportToCSV()">📥 Download CSV Spreadsheet</button>
-                <button class="secondary-btn" onclick="exportToJSONBackup()">🔒 Download Full JSON Backup</button>
+        <!-- Charts and History Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Chart Container -->
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm lg:col-span-1 flex flex-col justify-between">
+                <h3 class="text-sm font-semibold text-slate-400 mb-4">Financial Breakdown</h3>
+                <div class="relative h-64 flex items-center justify-center">
+                    <canvas id="financeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-semibold text-slate-400">Recent Transactions</h3>
+                    <button onclick="clearData()" class="text-xs text-rose-400 hover:underline">Clear All</button>
+                </div>
+                <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-700 text-xs text-slate-400">
+                                <th class="py-2 px-3">Description</th>
+                                <th class="py-2 px-3">Category</th>
+                                <th class="py-2 px-3">Details</th>
+                                <th class="py-2 px-3 text-right">Amount</th>
+                                <th class="py-2 px-3 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-list" class="text-sm divide-y divide-slate-700/50">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- TRANSACTION MODAL -->
-    <div class="modal" id="transactionModal">
-        <div class="modal-content">
-            <h2 id="modalTitle">Add New Transaction</h2>
-            <input type="hidden" id="editIndex">
-            <div class="form-group">
-                <label>Transaction Type</label>
-                <select id="transType" onchange="updateSubcategories()">
-                    <option value="Income">Income (Revenue)</option>
-                    <option value="Expense">Expense (Operational / Overhead)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Category / Subcategory</label>
-                <select id="transCategory">
-                    <!-- Dynamic -->
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Client / Company Name</label>
-                <input type="text" id="clientName" placeholder="e.g. SkyFreight Logistics / VIP Charter">
-            </div>
-            <div class="form-group">
-                <label>Payment Method</label>
-                <select id="paymentMethod">
-                    <option value="Direct Bank Transfer">Direct Bank Transfer</option>
-                    <option value="Card">Credit / Debit Card</option>
-                    <option value="Cash">Cash / Petty Cash</option>
-                    <option value="Corporate Account">Corporate Account</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Aircraft Tail Number / Reference</label>
-                <input type="text" id="tailNumber" placeholder="e.g. 5Y-ABC or Charter Ref #">
-            </div>
-            <div class="form-group">
-                <label>Amount ($)</label>
-                <input type="number" id="transAmount" step="0.01" placeholder="0.00">
-            </div>
-            <div class="form-group">
-                <label>Date</label>
-                <input type="date" id="transDate">
-            </div>
-            <div class="form-group">
-                <label>Description / Notes</label>
-                <input type="text" id="transDesc" placeholder="Flight route, invoice #, notes...">
-            </div>
-            <div class="modal-actions">
-                <button class="secondary-btn" onclick="closeModal()">Cancel</button>
-                <button class="action-btn" onclick="saveTransaction()">Save Transaction</button>
-            </div>
-        </div>
-    </div>
+    </main>
 
+    <!-- JavaScript Logic -->
     <script>
-        // Initial Mock Data tailored for Charter & Cargo
-        let transactions = JSON.parse(localStorage.getItem('aero_ledger_data')) || [
-            { id: 1, type: 'Income', category: 'Cargo Contract', client: 'Global Express Logistics', payment: 'Direct Bank Transfer', tail: '5Y-XYZ', amount: 45000, date: '2026-10-02', desc: 'Nairobi to Dar es Salaam freight' },
-            { id: 2, type: 'Income', category: 'On-Demand Charter', client: 'Executive Safari Group', payment: 'Card', tail: '5Y-ABC', amount: 18500, date: '2026-10-05', desc: 'Private charter circuit' },
-            { id: 3, type: 'Expense', category: 'Aviation Fuel', client: 'TotalEnergies Aviation', payment: 'Direct Bank Transfer', tail: '5Y-XYZ', amount: 14200, date: '2026-10-03', desc: 'Jet A-1 uplift (10,000L)' },
-            { id: 4, type: 'Expense', category: 'Landing & ATC Fees', client: 'KAA / ATNS', payment: 'Corporate Account', tail: '5Y-ABC', amount: 1250, date: '2026-10-06', desc: 'Navigation and landing charges' },
-            { id: 5, type: 'Expense', category: 'Petty Cash', client: 'Stationery & Crew Sundries', payment: 'Cash', tail: 'General', amount: 350, date: '2026-10-10', desc: 'Ground transport & ramp supplies' }
-        ];
+        lucide.createIcons();
 
-        let financeChart = null;
+        let transactions = JSON.parse(localStorage.getItem('aeroledger_tx')) || [];
 
-        const expenseCategories = [
-            'Aviation Fuel',
-            'Airport & Navigation Fees',
-            'Ground Handling & Catering',
-            'Maintenance & Overhaul (PBH)',
-            'Crew Variable Expenses',
-            'Petty Cash',
-            'Aircraft Lease / Debt',
-            'Insurance',
-            'Fixed Salaries & Overhead'
-        ];
+        const categories = {
+            income: ['Charter Flight', 'Cargo Run', 'Contract/Retainer', 'Other Income'],
+            expense: ['Aircraft Fuel', 'Office Rent', 'Landing/Parking Fees', 'Maintenance', 'Crew Salaries', 'Navigation Fees', 'Other Expense']
+        };
 
-        const incomeCategories = [
-            'On-Demand Charter Fares',
-            'Cargo Contracts & Freight',
-            'Government & Emergency / Medevac',
-            'ACMI / Wet Leasing',
-            'Cargo Surcharges & Hazmat',
-            'Third-Party Services & MRO'
-        ];
-
-        document.getElementById('transDate').valueAsDate = new Date();
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.dashboard-section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
-            if(tabId === 'overview') renderChart();
-        }
-
-        function updateSubcategories() {
-            const type = document.getElementById('transType').value;
-            const catSelect = document.getElementById('transCategory');
-            catSelect.innerHTML = '';
-            const categories = type === 'Income' ? incomeCategories : expenseCategories;
-            categories.forEach(cat => {
+        function toggleCategoryOptions() {
+            const type = document.getElementById('type').value;
+            const categorySelect = document.getElementById('category');
+            categorySelect.innerHTML = '';
+            categories[type].forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat;
                 opt.textContent = cat;
-                catSelect.appendChild(opt);
+                categorySelect.appendChild(opt);
             });
+            checkFuelCategory();
         }
 
-        function openModal(editIndex = null) {
-            document.getElementById('transactionModal').style.display = 'flex';
-            updateSubcategories();
-            if (editIndex !== null) {
-                document.getElementById('modalTitle').textContent = 'Edit Transaction';
-                const t = transactions[editIndex];
-                document.getElementById('editIndex').value = editIndex;
-                document.getElementById('transType').value = t.type;
-                updateSubcategories();
-                document.getElementById('transCategory').value = t.category;
-                document.getElementById('clientName').value = t.client || '';
-                document.getElementById('paymentMethod').value = t.payment || 'Direct Bank Transfer';
-                document.getElementById('tailNumber').value = t.tail || '';
-                document.getElementById('transAmount').value = t.amount;
-                document.getElementById('transDate').value = t.date;
-                document.getElementById('transDesc').value = t.desc;
+        function checkFuelCategory() {
+            const category = document.getElementById('category').value;
+            const fuelFields = document.getElementById('fuel-fields');
+            if (category === 'Aircraft Fuel') {
+                fuelFields.classList.remove('hidden');
             } else {
-                document.getElementById('modalTitle').textContent = 'Add New Transaction';
-                document.getElementById('editIndex').value = '';
-                document.getElementById('clientName').value = '';
-                document.getElementById('tailNumber').value = '';
-                document.getElementById('transAmount').value = '';
-                document.getElementById('transDesc').value = '';
-                document.getElementById('transDate').valueAsDate = new Date();
+                fuelFields.classList.add('hidden');
+                document.getElementById('fuel-liters').value = '';
+                document.getElementById('fuel-route').value = '';
             }
         }
 
-        function closeModal() {
-            document.getElementById('transactionModal').style.display = 'none';
-        }
+        function addTransaction(e) {
+            e.preventDefault();
+            const type = document.getElementById('type').value;
+            const category = document.getElementById('category').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const description = document.getElementById('description').value;
+            let details = '';
 
-        function saveTransaction() {
-            const editIndex = document.getElementById('editIndex').value;
-            const type = document.getElementById('transType').value;
-            const category = document.getElementById('transCategory').value;
-            const client = document.getElementById('clientName').value || 'Unspecified Client';
-            const payment = document.getElementById('paymentMethod').value;
-            const tail = document.getElementById('tailNumber').value || 'N/A';
-            const amount = parseFloat(document.getElementById('transAmount').value);
-            const date = document.getElementById('transDate').value;
-            const desc = document.getElementById('transDesc').value;
-
-            if (isNaN(amount) || amount <= 0) {
-                alert('Please enter a valid amount.');
-                return;
+            if (category === 'Aircraft Fuel') {
+                const liters = document.getElementById('fuel-liters').value;
+                const route = document.getElementById('fuel-route').value;
+                if (liters) details += `${liters}L`;
+                if (route) details += (details ? ' | ' : '') + `Route: ${route}`;
             }
 
-            const transObj = { id: Date.now(), type, category, client, payment, tail, amount, date, desc };
+            const tx = {
+                id: Date.now(),
+                type,
+                category,
+                amount,
+                description,
+                details,
+                date: new Date().toLocaleDateString()
+            };
 
-            if (editIndex === '') {
-                transactions.push(transObj);
-            } else {
-                transactions[editIndex] = transObj;
-            }
-
-            localStorage.setItem('aero_ledger_data', JSON.stringify(transactions));
-            closeModal();
-            renderDashboard();
-        }
-
-        function deleteTransaction(index) {
-            if (confirm('Are you sure you want to delete this record?')) {
-                transactions.splice(index, 1);
-                localStorage.setItem('aero_ledger_data', JSON.stringify(transactions));
-                renderDashboard();
-            }
-        }
-
-        function filterTransactions() {
-            const timeFilter = document.getElementById('timeFilter').value;
-            const paymentFilter = document.getElementById('paymentFilter').value;
-            const search = document.getElementById('searchInput').value.toLowerCase();
-
-            const now = new Date();
-
-            return transactions.filter(t => {
-                const tDate = new Date(t.date);
-
-                // Time filter check
-                if (timeFilter === 'weekly') {
-                    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                    if (tDate < oneWeekAgo) return false;
-                } else if (timeFilter === 'monthly') {
-                    if (tDate.getMonth() !== now.getMonth() || tDate.getFullYear() !== now.getFullYear()) return false;
-                } else if (timeFilter === 'annually') {
-                    if (tDate.getFullYear() !== now.getFullYear()) return false;
-                }
-
-                // Payment filter check
-                if (paymentFilter !== 'all' && t.payment !== paymentFilter) return false;
-
-                // Search query check
-                if (search && !Object.values(t).some(val => String(val).toLowerCase().includes(search))) {
-                    return false;
-                }
-
-                return true;
-            });
-        }
-
-        function renderDashboard() {
-            const filtered = filterTransactions();
-
-            let totalIncome = 0;
-            let totalExpense = 0;
-            let totalPetty = 0;
-
-            let expHtml = '';
-            let incHtml = '';
-
-            filtered.forEach((t, index) => {
-                const payBadgeClass = t.payment === 'Cash' ? 'cash' : t.payment === 'Card' ? 'card' : 'transfer';
-                const rowHtml = `
-                    <tr>
-                        <td>${t.date}</td>
-                        <td><strong>${t.client}</strong></td>
-                        <td>${t.category}</td>
-                        <td><span class="badge ${payBadgeClass}">${t.payment}</span></td>
-                        <td>${t.tail}</td>
-                        <td>${t.desc}</td>
-                        <td style="font-weight:700; color:${t.type === 'Income' ? 'var(--success)' : 'var(--danger)'}">
-                            ${t.type === 'Income' ? '+' : '-'}$${t.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}
-                        </td>
-                        <td>
-                            <button class="action-btn" style="padding:4px 8px; font-size:0.75rem;" onclick="openModal(${transactions.indexOf(t)})">Edit</button>
-                            <button class="secondary-btn" style="padding:4px 8px; font-size:0.75rem; background:var(--danger);" onclick="deleteTransaction(${transactions.indexOf(t)})">Del</button>
-                        </td>
-                    </tr>
-                `;
-
-                if (t.type === 'Income') {
-                    totalIncome += t.amount;
-                    incHtml += rowHtml;
-                } else {
-                    totalExpense += t.amount;
-                    if (t.category === 'Petty Cash') totalPetty += t.amount;
-                    expHtml += rowHtml;
-                }
-            });
-
-            document.getElementById('expenseTableBody').innerHTML = expHtml;
-            document.getElementById('incomeTableBody').innerHTML = incHtml;
-
-            const net = totalIncome - totalExpense;
-
-            document.getElementById('sumIncome').textContent = `$${totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            document.getElementById('sumExpense').textContent = `$${totalExpense.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            document.getElementById('sumPetty').textContent = `$${totalPetty.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            transactions.unshift(tx);
+            localStorage.setItem('aeroledger_tx', JSON.stringify(transactions));
             
-            const netEl = document.getElementById('sumNet');
-            netEl.textContent = `$${net.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            netEl.style.color = net >= 0 ? 'var(--success)' : 'var(--danger)';
-
-            renderChart(totalIncome, totalExpense, totalPetty);
+            document.getElementById('transaction-form').reset();
+            toggleCategoryOptions();
+            updateUI();
         }
 
-        function renderChart(inc = 0, exp = 0, petty = 0) {
-            const ctx = document.getElementById('financeChart').getContext('2d');
-            if (financeChart) financeChart.destroy();
-
-            financeChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Total Income', 'Total Expenses', 'Petty Cash Outflow'],
-                    datasets: [{
-                        label: 'Amount ($ USD)',
-                        data: [inc, exp, petty],
-                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
+        function deleteTransaction(id) {
+            transactions = transactions.filter(tx => tx.id !== id);
+            localStorage.setItem('aeroledger_tx', JSON.stringify(transactions));
+            updateUI();
         }
 
-        function renderArchive() {
-            const year = document.getElementById('archiveYearSelect').value;
-            const summary = document.getElementById('archiveSummary');
-            summary.innerHTML = `Viewing historical archive block: <strong>${year}</strong>. All logs, client names, and payment methods are locked for auditing and regulatory compliance.`;
-        }
-
-        // Local Backup & Export Functions
-        function exportToCSV() {
-            if (transactions.length === 0) {
-                alert('No transactions to export.');
-                return;
+        function clearData() {
+            if (confirm('Are you sure you want to clear all transactions?')) {
+                transactions = [];
+                localStorage.removeItem('aeroledger_tx');
+                updateUI();
             }
-            let csvContent = 'data:text/csv;charset=utf-8,ID,Type,Category,Client,PaymentMethod,TailNumber,Amount,Date,Description\n';
-            transactions.forEach(t => {
-                csvContent += `${t.id},${t.type},"${t.category}","${t.client}","${t.payment}","${t.tail}",${t.amount},${t.date},"${t.desc}"\n`;
-            });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `AeroLedger_Backup_${new Date().toISOString().slice(0,10)}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
 
-        function exportToJSONBackup() {
+        function exportData() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(transactions, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `AeroLedger_FullBackup_${new Date().toISOString().slice(0,10)}.json`);
+            downloadAnchor.setAttribute("download", `aeroledger_backup_${new Date().toISOString().split('T')[0]}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
         }
 
-        // Initial render on load
-        renderDashboard();
+        let myChart = null;
+        function updateUI() {
+            let totalIncome = 0;
+            let totalExpense = 0;
+            const list = document.getElementById('transaction-list');
+            list.innerHTML = '';
+
+            if (transactions.length === 0) {
+                list.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500 text-sm">No transactions recorded yet.</td></tr>`;
+            }
+
+            transactions.forEach(tx => {
+                if (tx.type === 'income') totalIncome += tx.amount;
+                else totalExpense += tx.amount;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="py-3 px-3 font-medium text-white">${tx.description}<br><span class="text-xs text-slate-400 font-normal">${tx.date}</span></td>
+                    <td class="py-3 px-3 text-slate-300 text-xs">${tx.category}</td>
+                    <td class="py-3 px-3 text-slate-400 text-xs">${tx.details || '-'}</td>
+                    <td class="py-3 px-3 text-right font-semibold ${tx.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${tx.type === 'income' ? '+' : '-'}$${tx.amount.toFixed(2)}
+                    </td>
+                    <td class="py-3 px-3 text-center">
+                        <button onclick="deleteTransaction(${tx.id})" class="text-slate-500 hover:text-rose-400 text-xs">✕</button>
+                    </td>
+                `;
+                list.appendChild(row);
+            });
+
+            document.getElementById('total-income').textContent = `$${totalIncome.toFixed(2)}`;
+            document.getElementById('total-expense').textContent = `$${totalExpense.toFixed(2)}`;
+            const net = totalIncome - totalExpense;
+            const netEl = document.getElementById('net-balance');
+            netEl.textContent = `$${net.toFixed(2)}`;
+            netEl.className = `text-2xl font-bold ${net >= 0 ? 'text-white' : 'text-rose-400'}`;
+
+            // Update Chart
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Income', 'Expenses'],
+                    datasets: [{
+                        data: [totalIncome, totalExpense],
+                        backgroundColor: ['#34d399', '#f87171'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } }
+                }
+            });
+        }
+
+        toggleCategoryOptions();
+        updateUI();
     </script>
 </body>
 </html>
