@@ -6,8 +6,6 @@
     <title>AeroLedger - Aviation Financial Dashboard</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -39,31 +37,6 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-sm">
-                <div class="flex justify-between items-center text-slate-400 mb-2">
-                    <span class="text-sm font-medium">Total Income</span>
-                    <i data-lucide="trending-up" class="w-5 h-5 text-emerald-400"></i>
-                </div>
-                <div id="total-income" class="text-2xl font-bold text-emerald-400">$0.00</div>
-            </div>
-            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-sm">
-                <div class="flex justify-between items-center text-slate-400 mb-2">
-                    <span class="text-sm font-medium">Total Expenses</span>
-                    <i data-lucide="trending-down" class="w-5 h-5 text-rose-400"></i>
-                </div>
-                <div id="total-expense" class="text-2xl font-bold text-rose-400">$0.00</div>
-            </div>
-            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-sm">
-                <div class="flex justify-between items-center text-slate-400 mb-2">
-                    <span class="text-sm font-medium">Net Balance</span>
-                    <i data-lucide="wallet" class="w-5 h-5 text-blue-400"></i>
-                </div>
-                <div id="net-balance" class="text-2xl font-bold text-white">$0.00</div>
-            </div>
-        </div>
 
         <!-- Action Grid: Add Transaction Form -->
         <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
@@ -115,38 +88,66 @@
             </form>
         </div>
 
-        <!-- Charts and History Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Chart Container -->
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm lg:col-span-1 flex flex-col justify-between">
-                <h3 class="text-sm font-semibold text-slate-400 mb-4">Financial Breakdown</h3>
-                <div class="relative h-64 flex items-center justify-center">
-                    <canvas id="financeChart"></canvas>
+        <!-- 4-Card Summary Block (Placed Right Above Transaction Entries) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Total Income -->
+            <div class="bg-slate-800 p-5 rounded-2xl border-t-4 border-t-emerald-500 border border-slate-700 shadow-sm">
+                <div class="flex justify-between items-center text-slate-400 mb-2">
+                    <span class="text-xs uppercase tracking-wider font-semibold">Total Income</span>
+                    <i data-lucide="trending-up" class="w-5 h-5 text-emerald-400"></i>
                 </div>
+                <div id="total-income" class="text-2xl font-bold text-emerald-400">$0.00</div>
             </div>
 
-            <!-- Transaction History -->
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm lg:col-span-2">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-sm font-semibold text-slate-400">Recent Transactions</h3>
-                    <button onclick="clearData()" class="text-xs text-rose-400 hover:underline">Clear All</button>
+            <!-- Total Expenses -->
+            <div class="bg-slate-800 p-5 rounded-2xl border-t-4 border-t-rose-500 border border-slate-700 shadow-sm">
+                <div class="flex justify-between items-center text-slate-400 mb-2">
+                    <span class="text-xs uppercase tracking-wider font-semibold">Total Expenses</span>
+                    <i data-lucide="trending-down" class="w-5 h-5 text-rose-400"></i>
                 </div>
-                <div class="overflow-x-auto max-h-80 overflow-y-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b border-slate-700 text-xs text-slate-400">
-                                <th class="py-2 px-3">Description</th>
-                                <th class="py-2 px-3">Category</th>
-                                <th class="py-2 px-3">Details</th>
-                                <th class="py-2 px-3 text-right">Amount</th>
-                                <th class="py-2 px-3 text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transaction-list" class="text-sm divide-y divide-slate-700/50">
-                            <!-- Populated dynamically -->
-                        </tbody>
-                    </table>
+                <div id="total-expense" class="text-2xl font-bold text-rose-400">$0.00</div>
+            </div>
+
+            <!-- Petty Cash Outflow -->
+            <div class="bg-slate-800 p-5 rounded-2xl border-t-4 border-t-amber-500 border border-slate-700 shadow-sm">
+                <div class="flex justify-between items-center text-slate-400 mb-2">
+                    <span class="text-xs uppercase tracking-wider font-semibold">Petty Cash Outflow</span>
+                    <i data-lucide="coins" class="w-5 h-5 text-amber-400"></i>
                 </div>
+                <div id="petty-cash" class="text-2xl font-bold text-amber-400">$0.00</div>
+            </div>
+
+            <!-- Net Operating Balance -->
+            <div class="bg-slate-800 p-5 rounded-2xl border-t-4 border-t-blue-500 border border-slate-700 shadow-sm">
+                <div class="flex justify-between items-center text-slate-400 mb-2">
+                    <span class="text-xs uppercase tracking-wider font-semibold">Net Operating Balance</span>
+                    <i data-lucide="wallet" class="w-5 h-5 text-blue-400"></i>
+                </div>
+                <div id="net-balance" class="text-2xl font-bold text-white">$0.00</div>
+            </div>
+        </div>
+
+        <!-- Transaction History / Entries -->
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Recent Transactions Log</h3>
+                <button onclick="clearData()" class="text-xs text-rose-400 hover:underline">Clear All</button>
+            </div>
+            <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-700 text-xs text-slate-400 uppercase tracking-wider">
+                            <th class="py-3 px-3">Description</th>
+                            <th class="py-3 px-3">Category</th>
+                            <th class="py-3 px-3">Details</th>
+                            <th class="py-3 px-3 text-right">Amount</th>
+                            <th class="py-3 px-3 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transaction-list" class="text-sm divide-y divide-slate-700/50">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -160,7 +161,7 @@
 
         const categories = {
             income: ['Charter Flight', 'Cargo Run', 'Contract/Retainer', 'Other Income'],
-            expense: ['Aircraft Fuel', 'Office Rent', 'Landing/Parking Fees', 'Maintenance', 'Crew Salaries', 'Navigation Fees', 'Other Expense']
+            expense: ['Aircraft Fuel', 'Office Rent', 'Petty Cash', 'Landing/Parking Fees', 'Maintenance', 'Crew Salaries', 'Navigation Fees', 'Other Expense']
         };
 
         function toggleCategoryOptions() {
@@ -245,10 +246,10 @@
             downloadAnchor.remove();
         }
 
-        let myChart = null;
         function updateUI() {
             let totalIncome = 0;
             let totalExpense = 0;
+            let pettyCashOutflow = 0;
             const list = document.getElementById('transaction-list');
             list.innerHTML = '';
 
@@ -257,8 +258,14 @@
             }
 
             transactions.forEach(tx => {
-                if (tx.type === 'income') totalIncome += tx.amount;
-                else totalExpense += tx.amount;
+                if (tx.type === 'income') {
+                    totalIncome += tx.amount;
+                } else {
+                    totalExpense += tx.amount;
+                    if (tx.category === 'Petty Cash') {
+                        pettyCashOutflow += tx.amount;
+                    }
+                }
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -277,30 +284,12 @@
 
             document.getElementById('total-income').textContent = `$${totalIncome.toFixed(2)}`;
             document.getElementById('total-expense').textContent = `$${totalExpense.toFixed(2)}`;
+            document.getElementById('petty-cash').textContent = `$${pettyCashOutflow.toFixed(2)}`;
+            
             const net = totalIncome - totalExpense;
             const netEl = document.getElementById('net-balance');
             netEl.textContent = `$${net.toFixed(2)}`;
             netEl.className = `text-2xl font-bold ${net >= 0 ? 'text-white' : 'text-rose-400'}`;
-
-            // Update Chart
-            const ctx = document.getElementById('financeChart').getContext('2d');
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Income', 'Expenses'],
-                    datasets: [{
-                        data: [totalIncome, totalExpense],
-                        backgroundColor: ['#34d399', '#f87171'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } }
-                }
-            });
         }
 
         toggleCategoryOptions();
