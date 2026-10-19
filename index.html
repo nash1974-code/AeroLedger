@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AeroLedger - Aviation Financial Dashboard</title>
+    <title>AeroLedger - Aviation Financial Operations</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -38,57 +40,10 @@
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-        <!-- Action Grid: Add Transaction Form -->
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
-            <h2 class="text-lg font-semibold mb-4 flex items-center space-x-2">
-                <i data-lucide="plus-circle" class="w-5 h-5 text-blue-400"></i>
-                <span>New Transaction</span>
-            </h2>
-            <form id="transaction-form" onsubmit="addTransaction(event)" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Type</label>
-                        <select id="type" onchange="toggleCategoryOptions()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                            <option value="income">Income (Charter / Cargo)</option>
-                            <option value="expense">Expense</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Category</label>
-                        <select id="category" onchange="checkFuelCategory()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                            <!-- Populated dynamically -->
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Amount ($)</label>
-                        <input type="number" step="0.01" id="amount" required placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                    </div>
-                </div>
+        <!-- Insurance Expiry Banner Alerts -->
+        <div id="insurance-alerts" class="hidden space-y-2"></div>
 
-                <!-- Conditional Fuel Extra Fields -->
-                <div id="fuel-fields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-900/50 rounded-xl border border-slate-700/60">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Fuel Quantity (Liters)</label>
-                        <input type="number" step="0.1" id="fuel-liters" placeholder="e.g., 450" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Route / Sector</label>
-                        <input type="text" id="fuel-route" placeholder="e.g., FAOR - FQMA" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Description / Notes</label>
-                    <input type="text" id="description" required placeholder="e.g., VIP Charter Flight / Office Rent for October" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                </div>
-
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-xl transition text-sm">
-                    Save Transaction
-                </button>
-            </form>
-        </div>
-
-        <!-- 4-Card Summary Block (Placed Right Above Transaction Entries) -->
+        <!-- 4-Card Operational Metrics Summary -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Total Income -->
             <div class="bg-slate-800 p-5 rounded-2xl border-t-4 border-t-emerald-500 border border-slate-700 shadow-sm">
@@ -109,12 +64,12 @@
             </div>
 
             <!-- Petty Cash Outflow -->
-            <div class="bg-slate-800 p-5 rounded-2xl border-t-4 border-t-amber-500 border border-slate-700 shadow-sm">
+            <div class="bg-slate-800 p-5 rounded-2xl border-t-4 border-t-cyan-500 border border-slate-700 shadow-sm">
                 <div class="flex justify-between items-center text-slate-400 mb-2">
                     <span class="text-xs uppercase tracking-wider font-semibold">Petty Cash Outflow</span>
-                    <i data-lucide="coins" class="w-5 h-5 text-amber-400"></i>
+                    <i data-lucide="coins" class="w-5 h-5 text-cyan-400"></i>
                 </div>
-                <div id="petty-cash" class="text-2xl font-bold text-amber-400">$0.00</div>
+                <div id="petty-cash" class="text-2xl font-bold text-cyan-400">$0.00</div>
             </div>
 
             <!-- Net Operating Balance -->
@@ -127,10 +82,109 @@
             </div>
         </div>
 
-        <!-- Transaction History / Entries -->
+        <!-- Action Grid: Add Transaction Form -->
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
+            <h2 class="text-lg font-semibold mb-4 flex items-center space-x-2">
+                <i data-lucide="plus-circle" class="w-5 h-5 text-blue-400"></i>
+                <span>New Transaction Entry</span>
+            </h2>
+            <form id="transaction-form" onsubmit="addTransaction(event)" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Type</label>
+                        <select id="type" onchange="toggleCategoryOptions()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                            <option value="income">Income (Charter / Cargo)</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Category</label>
+                        <select id="category" onchange="handleCategoryChange()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Amount ($)</label>
+                        <input type="number" step="0.01" id="amount" required placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- Conditional Fuel Extra Fields -->
+                <div id="fuel-fields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-900/60 rounded-xl border border-amber-700/60">
+                    <div>
+                        <label class="block text-xs font-medium text-amber-400 mb-1">Fuel Quantity (Liters)</label>
+                        <input type="number" step="0.1" id="fuel-liters" placeholder="e.g., 450" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-amber-400 mb-1">Route / Sector</label>
+                        <input type="text" id="fuel-route" placeholder="e.g., FAOR - FQMA" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <!-- Conditional Insurance Extra Fields -->
+                <div id="insurance-fields" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-slate-900/60 rounded-xl border border-indigo-700/60">
+                    <div>
+                        <label class="block text-xs font-medium text-indigo-400 mb-1">Policy / Hull Number</label>
+                        <input type="text" id="ins-policy" placeholder="e.g., AV-99482-X" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-indigo-400 mb-1">Policy Start Date</label>
+                        <input type="date" id="ins-start" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-indigo-400 mb-1">Renewal / Expiry Date</label>
+                        <input type="date" id="ins-renewal" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <!-- Conditional Maintenance Extra Fields -->
+                <div id="maint-fields" class="hidden space-y-3 p-4 bg-slate-900/60 rounded-xl border border-rose-700/60">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-rose-400 mb-1">Maintenance Subsection</label>
+                            <select id="maint-sub" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+                                <option value="Line Maintenance">Line Maintenance</option>
+                                <option value="Route Maintenance">Route Maintenance</option>
+                                <option value="Intermediate Checks (A/B)">Intermediate Checks (A/B)</option>
+                                <option value="Heavy Maintenance (C-Check)">Heavy Maintenance (C-Check)</option>
+                                <option value="Complete Overhaul (D-Check)">Complete Overhaul (D-Check)</option>
+                                <option value="Unscheduled Maintenance">Unscheduled Maintenance</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-rose-400 mb-1">Work Order #</label>
+                            <input type="text" id="maint-wo" placeholder="e.g., WO-2026-881" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-rose-400 mb-1">Service Provider / MRO</label>
+                            <input type="text" id="maint-mro" placeholder="e.g., Skyway Aero Maintenance" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Description / Notes</label>
+                    <input type="text" id="description" required placeholder="e.g., Hull & Liability Insurance Annual Premium / October Office Rent" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-xl transition text-sm">
+                    Save Transaction Entry
+                </button>
+            </form>
+        </div>
+
+        <!-- Middle Section: Visual Expense Breakdown Chart -->
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
+            <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Financial Overview & Distribution</h3>
+            <div class="relative h-64 flex items-center justify-center">
+                <canvas id="financeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Bottom Section: Enlisted Transactions Log -->
         <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Recent Transactions Log</h3>
+                <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Enlisted Transactions</h3>
                 <button onclick="clearData()" class="text-xs text-rose-400 hover:underline">Clear All</button>
             </div>
             <div class="overflow-x-auto max-h-96 overflow-y-auto">
@@ -138,8 +192,8 @@
                     <thead>
                         <tr class="border-b border-slate-700 text-xs text-slate-400 uppercase tracking-wider">
                             <th class="py-3 px-3">Description</th>
-                            <th class="py-3 px-3">Category</th>
-                            <th class="py-3 px-3">Details</th>
+                            <th class="py-3 px-3">Category Tag</th>
+                            <th class="py-3 px-3">Details / Specifications</th>
                             <th class="py-3 px-3 text-right">Amount</th>
                             <th class="py-3 px-3 text-center">Action</th>
                         </tr>
@@ -161,7 +215,23 @@
 
         const categories = {
             income: ['Charter Flight', 'Cargo Run', 'Contract/Retainer', 'Other Income'],
-            expense: ['Aircraft Fuel', 'Office Rent', 'Petty Cash', 'Landing/Parking Fees', 'Maintenance', 'Crew Salaries', 'Navigation Fees', 'Other Expense']
+            expense: ['Aircraft Fuel', 'Aircraft Insurance', 'Maintenance', 'Office Rent', 'Petty Cash', 'Landing/Parking Fees', 'Crew Salaries', 'Navigation Fees', 'Other Expense']
+        };
+
+        const categoryColors = {
+            'Charter Flight': 'bg-emerald-900/60 text-emerald-300 border-emerald-700',
+            'Cargo Run': 'bg-emerald-900/60 text-emerald-300 border-emerald-700',
+            'Contract/Retainer': 'bg-emerald-900/60 text-emerald-300 border-emerald-700',
+            'Other Income': 'bg-emerald-900/60 text-emerald-300 border-emerald-700',
+            'Aircraft Fuel': 'bg-amber-950/80 text-amber-300 border-amber-700',
+            'Aircraft Insurance': 'bg-indigo-950/80 text-indigo-300 border-indigo-700',
+            'Maintenance': 'bg-rose-950/80 text-rose-300 border-rose-700',
+            'Office Rent': 'bg-purple-950/80 text-purple-300 border-purple-700',
+            'Petty Cash': 'bg-cyan-950/80 text-cyan-300 border-cyan-700',
+            'Landing/Parking Fees': 'bg-teal-950/80 text-teal-300 border-teal-700',
+            'Crew Salaries': 'bg-blue-950/80 text-blue-300 border-blue-700',
+            'Navigation Fees': 'bg-slate-800 text-slate-300 border-slate-600',
+            'Other Expense': 'bg-slate-800 text-slate-400 border-slate-600'
         };
 
         function toggleCategoryOptions() {
@@ -174,19 +244,15 @@
                 opt.textContent = cat;
                 categorySelect.appendChild(opt);
             });
-            checkFuelCategory();
+            handleCategoryChange();
         }
 
-        function checkFuelCategory() {
+        function handleCategoryChange() {
             const category = document.getElementById('category').value;
-            const fuelFields = document.getElementById('fuel-fields');
-            if (category === 'Aircraft Fuel') {
-                fuelFields.classList.remove('hidden');
-            } else {
-                fuelFields.classList.add('hidden');
-                document.getElementById('fuel-liters').value = '';
-                document.getElementById('fuel-route').value = '';
-            }
+            
+            document.getElementById('fuel-fields').classList.toggle('hidden', category !== 'Aircraft Fuel');
+            document.getElementById('insurance-fields').classList.toggle('hidden', category !== 'Aircraft Insurance');
+            document.getElementById('maint-fields').classList.toggle('hidden', category !== 'Maintenance');
         }
 
         function addTransaction(e) {
@@ -196,12 +262,28 @@
             const amount = parseFloat(document.getElementById('amount').value);
             const description = document.getElementById('description').value;
             let details = '';
+            let renewalDate = null;
 
             if (category === 'Aircraft Fuel') {
                 const liters = document.getElementById('fuel-liters').value;
                 const route = document.getElementById('fuel-route').value;
                 if (liters) details += `${liters}L`;
                 if (route) details += (details ? ' | ' : '') + `Route: ${route}`;
+            } else if (category === 'Aircraft Insurance') {
+                const policy = document.getElementById('ins-policy').value;
+                const start = document.getElementById('ins-start').value;
+                const renewal = document.getElementById('ins-renewal').value;
+                renewalDate = renewal || null;
+                if (policy) details += `Policy: ${policy}`;
+                if (start) details += (details ? ' | ' : '') + `Start: ${start}`;
+                if (renewal) details += (details ? ' | ' : '') + `Renewal: ${renewal}`;
+            } else if (category === 'Maintenance') {
+                const sub = document.getElementById('maint-sub').value;
+                const wo = document.getElementById('maint-wo').value;
+                const mro = document.getElementById('maint-mro').value;
+                details += sub;
+                if (wo) details += ` | WO: ${wo}`;
+                if (mro) details += ` | MRO: ${mro}`;
             }
 
             const tx = {
@@ -211,6 +293,7 @@
                 amount,
                 description,
                 details,
+                renewalDate,
                 date: new Date().toLocaleDateString()
             };
 
@@ -246,10 +329,58 @@
             downloadAnchor.remove();
         }
 
+        function checkInsuranceAlerts() {
+            const alertBox = document.getElementById('insurance-alerts');
+            alertBox.innerHTML = '';
+            let alertsCount = 0;
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            transactions.forEach(tx => {
+                if (tx.category === 'Aircraft Insurance' && tx.renewalDate) {
+                    const renewal = new Date(tx.renewalDate);
+                    const diffTime = renewal - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diffDays <= 30) {
+                        alertsCount++;
+                        const isExpired = diffDays < 0;
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = `p-4 rounded-xl border flex items-center justify-between ${
+                            isExpired ? 'bg-rose-950/90 border-rose-600 text-rose-200' : 'bg-amber-950/90 border-amber-600 text-amber-200'
+                        }`;
+                        alertDiv.innerHTML = `
+                            <div class="flex items-center space-x-3">
+                                <i data-lucide="${isExpired ? 'alert-octagon' : 'alert-triangle'}" class="w-6 h-6 flex-shrink-0"></i>
+                                <div>
+                                    <div class="font-bold text-sm">${isExpired ? 'EXPIRED INSURANCE POLICY' : 'INSURANCE RENEWAL DUE SOON'}</div>
+                                    <div class="text-xs opacity-90">${tx.description} (${tx.details}) — ${
+                                        isExpired ? `Expired ${Math.abs(diffDays)} days ago (${tx.renewalDate})` : `Due in ${diffDays} days (${tx.renewalDate})`
+                                    }</div>
+                                </div>
+                            </div>
+                        `;
+                        alertBox.appendChild(alertDiv);
+                    }
+                }
+            });
+
+            if (alertsCount > 0) {
+                alertBox.classList.remove('hidden');
+                lucide.createIcons();
+            } else {
+                alertBox.classList.add('hidden');
+            }
+        }
+
+        let myChart = null;
+
         function updateUI() {
             let totalIncome = 0;
             let totalExpense = 0;
             let pettyCashOutflow = 0;
+            const categoryTotals = {};
+
             const list = document.getElementById('transaction-list');
             list.innerHTML = '';
 
@@ -265,13 +396,20 @@
                     if (tx.category === 'Petty Cash') {
                         pettyCashOutflow += tx.amount;
                     }
+                    categoryTotals[tx.category] = (categoryTotals[tx.category] || 0) + tx.amount;
                 }
+
+                const colorClass = categoryColors[tx.category] || 'bg-slate-800 text-slate-300 border-slate-600';
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="py-3 px-3 font-medium text-white">${tx.description}<br><span class="text-xs text-slate-400 font-normal">${tx.date}</span></td>
-                    <td class="py-3 px-3 text-slate-300 text-xs">${tx.category}</td>
-                    <td class="py-3 px-3 text-slate-400 text-xs">${tx.details || '-'}</td>
+                    <td class="py-3 px-3">
+                        <span class="inline-block text-xs px-2.5 py-1 rounded-md border font-medium ${colorClass}">
+                            ${tx.category}
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 text-slate-300 text-xs">${tx.details || '-'}</td>
                     <td class="py-3 px-3 text-right font-semibold ${tx.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}">
                         ${tx.type === 'income' ? '+' : '-'}$${tx.amount.toFixed(2)}
                     </td>
@@ -290,6 +428,34 @@
             const netEl = document.getElementById('net-balance');
             netEl.textContent = `$${net.toFixed(2)}`;
             netEl.className = `text-2xl font-bold ${net >= 0 ? 'text-white' : 'text-rose-400'}`;
+
+            checkInsuranceAlerts();
+
+            // Chart Rendering
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            if (myChart) myChart.destroy();
+
+            const chartLabels = Object.keys(categoryTotals);
+            const chartData = Object.values(categoryTotals);
+
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartLabels.length ? chartLabels : ['No Expenses Yet'],
+                    datasets: [{
+                        data: chartData.length ? chartData : [1],
+                        backgroundColor: chartLabels.length ? ['#f59e0b', '#6366f1', '#f43f5e', '#a855f7', '#06b6d4', '#14b8a6', '#3b82f6', '#64748b'] : ['#334155'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } 
+                    }
+                }
+            });
         }
 
         toggleCategoryOptions();
