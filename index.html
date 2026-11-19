@@ -4,15 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AeroLedger - Aviation Financial Operations</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
+        @media print {
+            body { background: white !important; color: black !important; }
+            header button, #transaction-form-section, .no-print { display: none !important; }
+            .bg-slate-800 { background: white !important; border: 1px solid #ccc !important; color: black !important; }
+            .text-white, .text-slate-300, .text-slate-400 { color: black !important; }
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen pb-12">
@@ -30,9 +33,13 @@
                 </div>
             </div>
             <div class="flex items-center space-x-2">
-                <button onclick="exportData()" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-2 rounded-lg font-medium flex items-center space-x-1 transition">
-                    <i data-lucide="download" class="w-4 h-4"></i>
-                    <span class="hidden sm:inline">Export Backup</span>
+                <button onclick="exportCSV()" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-2 rounded-lg font-medium flex items-center space-x-1 transition">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                    <span>Partner CSV / Print</span>
+                </button>
+                <button onclick="syncToGoogleSheets()" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-3 py-2 rounded-lg font-medium flex items-center space-x-1 transition text-white">
+                    <i data-lucide="cloud" class="w-4 h-4"></i>
+                    <span>Sync to Sheets</span>
                 </button>
             </div>
         </div>
@@ -45,7 +52,6 @@
 
         <!-- 4-Card Operational Metrics Summary -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Total Income -->
             <div class="bg-slate-800 p-5 rounded-2xl border-t-4 border-t-emerald-500 border border-slate-700 shadow-sm">
                 <div class="flex justify-between items-center text-slate-400 mb-2">
                     <span class="text-xs uppercase tracking-wider font-semibold">Total Income</span>
@@ -54,7 +60,6 @@
                 <div id="total-income" class="text-2xl font-bold text-emerald-400">$0.00</div>
             </div>
 
-            <!-- Total Expenses -->
             <div class="bg-slate-800 p-5 rounded-2xl border-t-4 border-t-rose-500 border border-slate-700 shadow-sm">
                 <div class="flex justify-between items-center text-slate-400 mb-2">
                     <span class="text-xs uppercase tracking-wider font-semibold">Total Expenses</span>
@@ -63,7 +68,6 @@
                 <div id="total-expense" class="text-2xl font-bold text-rose-400">$0.00</div>
             </div>
 
-            <!-- Petty Cash Outflow -->
             <div class="bg-slate-800 p-5 rounded-2xl border-t-4 border-t-cyan-500 border border-slate-700 shadow-sm">
                 <div class="flex justify-between items-center text-slate-400 mb-2">
                     <span class="text-xs uppercase tracking-wider font-semibold">Petty Cash Outflow</span>
@@ -72,7 +76,6 @@
                 <div id="petty-cash" class="text-2xl font-bold text-cyan-400">$0.00</div>
             </div>
 
-            <!-- Net Operating Balance -->
             <div class="bg-slate-800 p-5 rounded-2xl border-t-4 border-t-blue-500 border border-slate-700 shadow-sm">
                 <div class="flex justify-between items-center text-slate-400 mb-2">
                     <span class="text-xs uppercase tracking-wider font-semibold">Net Operating Balance</span>
@@ -83,7 +86,7 @@
         </div>
 
         <!-- Action Grid: Add Transaction Form -->
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
+        <div id="transaction-form-section" class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
             <h2 class="text-lg font-semibold mb-4 flex items-center space-x-2">
                 <i data-lucide="plus-circle" class="w-5 h-5 text-blue-400"></i>
                 <span>New Transaction Entry</span>
@@ -99,9 +102,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Category</label>
-                        <select id="category" onchange="handleCategoryChange()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                            <!-- Populated dynamically -->
-                        </select>
+                        <select id="category" onchange="handleCategoryChange()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500"></select>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Amount ($)</label>
@@ -109,7 +110,7 @@
                     </div>
                 </div>
 
-                <!-- Conditional Fuel Extra Fields -->
+                <!-- Fuel Fields -->
                 <div id="fuel-fields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-900/60 rounded-xl border border-amber-700/60">
                     <div>
                         <label class="block text-xs font-medium text-amber-400 mb-1">Fuel Quantity (Liters)</label>
@@ -117,11 +118,11 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-amber-400 mb-1">Route / Sector</label>
-                        <input type="text" id="fuel-route" placeholder="e.g., FAOR - FQMA" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+                        <input type="text" id="fuel-route" placeholder="e.g., HTDA - HKJK" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
                     </div>
                 </div>
 
-                <!-- Conditional Insurance Extra Fields -->
+                <!-- Insurance Fields -->
                 <div id="insurance-fields" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-slate-900/60 rounded-xl border border-indigo-700/60">
                     <div>
                         <label class="block text-xs font-medium text-indigo-400 mb-1">Policy / Hull Number</label>
@@ -137,7 +138,7 @@
                     </div>
                 </div>
 
-                <!-- Conditional Maintenance Extra Fields -->
+                <!-- Maintenance Fields -->
                 <div id="maint-fields" class="hidden space-y-3 p-4 bg-slate-900/60 rounded-xl border border-rose-700/60">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
@@ -164,7 +165,7 @@
 
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Description / Notes</label>
-                    <input type="text" id="description" required placeholder="e.g., Hull & Liability Insurance Annual Premium / October Office Rent" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    <input type="text" id="description" required placeholder="e.g., Hull & Liability Insurance Annual Premium / Office Rent" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                 </div>
 
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-xl transition text-sm">
@@ -173,21 +174,24 @@
             </form>
         </div>
 
-        <!-- Middle Section: Visual Expense Breakdown Chart -->
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
+        <!-- Visual Expense Breakdown Chart -->
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm no-print">
             <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Financial Overview & Distribution</h3>
             <div class="relative h-64 flex items-center justify-center">
                 <canvas id="financeChart"></canvas>
             </div>
         </div>
 
-        <!-- Bottom Section: Enlisted Transactions Log -->
+        <!-- Enlisted Transactions Log -->
         <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Enlisted Transactions</h3>
-                <button onclick="clearData()" class="text-xs text-rose-400 hover:underline">Clear All</button>
+                <div class="space-x-3 no-print">
+                    <button onclick="window.print()" class="text-xs text-blue-400 hover:underline">Print Report</button>
+                    <button onclick="clearData()" class="text-xs text-rose-400 hover:underline">Clear All</button>
+                </div>
             </div>
-            <div class="overflow-x-auto max-h-96 overflow-y-auto">
+            <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b border-slate-700 text-xs text-slate-400 uppercase tracking-wider">
@@ -195,23 +199,23 @@
                             <th class="py-3 px-3">Category Tag</th>
                             <th class="py-3 px-3">Details / Specifications</th>
                             <th class="py-3 px-3 text-right">Amount</th>
-                            <th class="py-3 px-3 text-center">Action</th>
+                            <th class="py-3 px-3 text-center no-print">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="transaction-list" class="text-sm divide-y divide-slate-700/50">
-                        <!-- Populated dynamically -->
-                    </tbody>
+                    <tbody id="transaction-list" class="text-sm divide-y divide-slate-700/50"></tbody>
                 </table>
             </div>
         </div>
 
     </main>
 
-    <!-- JavaScript Logic -->
     <script>
         lucide.createIcons();
 
         let transactions = JSON.parse(localStorage.getItem('aeroledger_tx')) || [];
+
+        // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL INSIDE THE QUOTES BELOW:
+        const GOOGLE_SCRIPT_URL = 'PASTE_YOUR_GOOGLE_SCRIPT_URL_HERE';
 
         const categories = {
             income: ['Charter Flight', 'Cargo Run', 'Contract/Retainer', 'Other Income'],
@@ -234,6 +238,44 @@
             'Other Expense': 'bg-slate-800 text-slate-400 border-slate-600'
         };
 
+        async function syncToGoogleSheets() {
+            if (GOOGLE_SCRIPT_URL.includes('PASTE_YOUR_GOOGLE_SCRIPT')) {
+                alert('Please paste your Google Apps Script Web App URL into the code first.');
+                return;
+            }
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(transactions)
+                });
+                alert('Archive synced to Google Sheets successfully!');
+            } catch (err) {
+                alert('Sync failed. Please check your internet connection.');
+            }
+        }
+
+        function exportCSV() {
+            if (transactions.length === 0) {
+                alert('No transactions to export yet.');
+                return;
+            }
+            let csv = 'Date,Type,Category,Description,Details / Specifications,Amount ($)\n';
+            transactions.forEach(tx => {
+                const desc = `"${tx.description.replace(/"/g, '""')}"`;
+                const det = `"${(tx.details || '').replace(/"/g, '""')}"`;
+                csv += `${tx.date},${tx.type},${tx.category},${desc},${det},${tx.amount.toFixed(2)}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', `AeroLedger_Partner_Report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }
+
         function toggleCategoryOptions() {
             const type = document.getElementById('type').value;
             const categorySelect = document.getElementById('category');
@@ -249,7 +291,6 @@
 
         function handleCategoryChange() {
             const category = document.getElementById('category').value;
-            
             document.getElementById('fuel-fields').classList.toggle('hidden', category !== 'Aircraft Fuel');
             document.getElementById('insurance-fields').classList.toggle('hidden', category !== 'Aircraft Insurance');
             document.getElementById('maint-fields').classList.toggle('hidden', category !== 'Maintenance');
@@ -317,16 +358,6 @@
                 localStorage.removeItem('aeroledger_tx');
                 updateUI();
             }
-        }
-
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(transactions, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `aeroledger_backup_${new Date().toISOString().split('T')[0]}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
         }
 
         function checkInsuranceAlerts() {
@@ -413,7 +444,7 @@
                     <td class="py-3 px-3 text-right font-semibold ${tx.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}">
                         ${tx.type === 'income' ? '+' : '-'}$${tx.amount.toFixed(2)}
                     </td>
-                    <td class="py-3 px-3 text-center">
+                    <td class="py-3 px-3 text-center no-print">
                         <button onclick="deleteTransaction(${tx.id})" class="text-slate-500 hover:text-rose-400 text-xs">✕</button>
                     </td>
                 `;
@@ -431,7 +462,6 @@
 
             checkInsuranceAlerts();
 
-            // Chart Rendering
             const ctx = document.getElementById('financeChart').getContext('2d');
             if (myChart) myChart.destroy();
 
